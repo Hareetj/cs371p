@@ -15,7 +15,9 @@
 #include <cstddef>   // ptrdiff_t, size_t
 #include <new>       // bad_alloc, new
 #include <stdexcept> // invalid_argument
+#include <iostream>
 
+using namespace std;
 // ---------
 // Allocator
 // ---------
@@ -93,7 +95,15 @@ class Allocator {
          * throw a bad_alloc exception, if N is less than sizeof(T) + (2 * sizeof(int))
          */
         Allocator () {
-            (*this)[0] = 0; // replace!
+            if (N < (sizeof(T) + (2 * sizeof(int)))){
+                std::bad_alloc exception;
+                throw exception;
+            }
+
+            else{
+                a[0] =  static_cast<char>((N - (2 * sizeof(int))));
+                a[N-sizeof(int)] = static_cast<char>((N - (2 * sizeof(int))));
+            }
             // <your code>
             assert(valid());}
 
@@ -115,9 +125,40 @@ class Allocator {
          * throw a bad_alloc exception, if n is invalid
          */
         pointer allocate (size_type n) {
-            // <your code>
+            int sentinel = static_cast<int>(a[0]);
+            int pos1 = 0;
+            int pos2;
+            //cout << sentinel;
+            while (pos1 < N){
+                while (sentinel < 0 || (sentinel > 0 && sentinel < sizeof(T) + (2 * sizeof(int)))){
+                    pos1 = sentinel * -1 + 2*sizeof(int);
+                    sentintel = static_cast<int>(a[pos1]);
+                }
+                if (sentinel >= sizeof(T) + (2 * sizeof(int))){
+                    break;
+                }
+            }
+
+            if (pos1 > N){
+                std::bad_alloc exception;
+                throw exception;
+            }
+
+            pos2 = pos1 + sizeof(int) + n * sizeof(T);
+            int nextSentinel = sentinel - sizeof(T) * n + 2 * sizeof(n);
+            sentinel -= sizeof(T) * n;
+            if (nextSentinel < sizeof(T) + (2 * sizeof(int))){
+                std::bad_alloc exception;
+                throw exception;
+            }
+
+            a[pos1] = static_cast<char>(-sentinel);
+            a[pos2] = static_cast<char>(-sentinel);
+            a[pos2 + sizeof(int)] = nextSentinel;
+            a[pos2 + sizeof(int) + nextSentinel] = nextSentinel;
+
             assert(valid());
-            return nullptr;}             // replace!
+            return a[pos1+sizeof(int)];}             // replace!
 
         // ---------
         // construct
